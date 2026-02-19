@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrackIT — WWT Distribution Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     LOADER
+════════════════════════════════════════════════════ -->
+<div id="loader">
+  <div class="loader-logo">TRACKIT_SYS</div>
+  <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+  <div class="loader-lines" id="loader-lines"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     TOAST
+════════════════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════
+     KEYBOARD HINT
+════════════════════════════════════════════════════ -->
+<div class="shortcuts-hint" id="shortcuts-hint">PRESS 1–7 TO SWITCH VIEWS · ESC TO CLOSE</div>
+
+<!-- ══════════════════════════════════════════════════
+     MOBILE TOGGLE
+════════════════════════════════════════════════════ -->
+<button class="mobile-toggle" onclick="App.toggleSidebar()">☰</button>
+
+<!-- ══════════════════════════════════════════════════
+     TOP NAV (WWT baseline)
+════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <span class="nav-logo">WWT</span>
+  <div class="nav-sep"></div>
+  <span class="nav-title">TrackIT Distribution Hub</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="App.showView('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="App.showView('inventory')">Inventory</button>
+    <button class="nav-tab" onclick="App.showView('placement')">Placement</button>
+    <button class="nav-tab" onclick="App.showView('workarea')">Work Area</button>
+    <button class="nav-tab" onclick="App.showView('cvalerts')">CV Alerts</button>
+    <button class="nav-tab" onclick="App.showView('locations')">Locations</button>
+    <button class="nav-tab" onclick="App.showView('history')">History</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     APP BODY
+════════════════════════════════════════════════════ -->
+<div class="app-body">
+
+<!-- ══ SIDEBAR (TrackIT addition) ══ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">TRACKIT<span>_</span>WAREHOUSE<span>.</span>SYS</div>
+    <div class="sidebar-version">v2.0 · WWT Distribution Hub</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">Main</div>
+    <button class="sidebar-nav-item active" data-view="dashboard" onclick="App.showView('dashboard')">
+      <span class="sidebar-icon">◈</span> Dashboard
+    </button>
+
+    <div class="sidebar-section-label" style="margin-top:.4rem">Operations</div>
+    <button class="sidebar-nav-item" data-view="inventory" onclick="App.showView('inventory')">
+      <span class="sidebar-icon">≡</span> Inventory
+    </button>
+    <button class="sidebar-nav-item" data-view="placement" onclick="App.showView('placement')">
+      <span class="sidebar-icon">⊞</span> Placement
+    </button>
+    <button class="sidebar-nav-item" data-view="workarea" onclick="App.showView('workarea')">
+      <span class="sidebar-icon">▣</span> Work Area
+    </button>
+
+    <div class="sidebar-section-label" style="margin-top:.4rem">Monitoring</div>
+    <button class="sidebar-nav-item" data-view="cvalerts" onclick="App.showView('cvalerts')">
+      <span class="sidebar-icon">◎</span> CV Alerts
+      <span class="nav-badge" id="nav-alert-badge">0</span>
+    </button>
+    <button class="sidebar-nav-item" data-view="locations" onclick="App.showView('locations')">
+      <span class="sidebar-icon">⊡</span> Locations
+    </button>
+    <button class="sidebar-nav-item" data-view="history" onclick="App.showView('history')">
+      <span class="sidebar-icon">⊙</span> History
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="theme-toggle" onclick="App.toggleTheme()">
+      <span id="theme-icon">☀</span>
+      <span id="theme-label">LIGHT MODE</span>
+    </button>
+    <div class="conn-status">
+      <div class="conn-dot" id="conn-dot"></div>
+      <span id="conn-label">LOADING…</span>
+    </div>
+    <div id="sidebar-clock"></div>
+  </div>
+</aside>
+
+<!-- ══ MAIN CONTENT ══ -->
+<div class="main">
+
+<!-- ════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════════ -->
+
+<!-- Move Modal -->
+<div class="modal-overlay" id="moveModal">
+  <div class="modal">
+    <div class="modal-title">Move Item</div>
+    <div class="modal-sub" id="moveModalSub"></div>
+    <div class="modal-label">Select Destination Location</div>
+    <div class="modal-loc-list" id="moveLocList"></div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="UI.closeModal('moveModal')">Cancel</button>
+      <button class="btn-lg btn-lg-primary" id="moveConfirmBtn" onclick="App.confirmMove()" disabled>Move Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-title">Check Out to Work Area</div>
+    <div class="modal-sub" id="checkoutModalSub"></div>
+    <div class="modal-warn">⚠️ <strong>15-minute limit.</strong> Item must be returned to storage within 15 minutes.</div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="UI.closeModal('checkoutModal')">Cancel</button>
+      <button class="btn-lg btn-lg-primary" onclick="App.confirmCheckout()">Check Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- Checkin Modal -->
+<div class="modal-overlay" id="checkinModal">
+  <div class="modal">
+    <div class="modal-title">Check In from Work Area</div>
+    <div class="modal-sub" id="checkinModalSub"></div>
+    <div id="checkinTimingInfo" style="margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="UI.closeModal('checkinModal')">Cancel</button>
+      <button class="btn-lg btn-lg-green" onclick="App.confirmCheckin()">Check In</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Modal -->
+<div class="modal-overlay" id="aiModal">
+  <div class="modal">
+    <div class="modal-title">🤖 AI Location Suggestion</div>
+    <div class="modal-sub" id="aiModalSub"></div>
+    <div class="ai-thinking show" id="aiThinking">
+      <div class="spinner"></div>
+      Asking Gemini AI for best-fit location…
+    </div>
+    <div id="aiResultContent" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="UI.closeModal('aiModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     VIEW: DASHBOARD
+════════════════════════════════════════════════════ -->
+<div class="view active" id="view-dashboard">
+  <div class="page-heading">WWT Technology Distribution Hub — Dashboard</div>
+
+  <!-- WWT stat cards -->
+  <div class="stat-row">
+    <div class="stat-card">        <div class="stat-label">Total Items</div>  <div class="stat-value" id="statTotal">—</div></div>
+    <div class="stat-card green">  <div class="stat-label">In Storage</div>   <div class="stat-value" id="statStored">—</div></div>
+    <div class="stat-card amber">  <div class="stat-label">Unassigned</div>   <div class="stat-value" id="statUnassigned">—</div></div>
+    <div class="stat-card red">    <div class="stat-label">Work Area</div>    <div class="stat-value" id="statWorkArea">—</div></div>
+  </div>
+
+  <!-- Utilization bar -->
+  <div class="util-card">
+    <div class="util-label">Warehouse Utilization</div>
+    <div class="util-bar-bg"><div class="util-bar-fill" id="utilBar" style="width:0%"></div></div>
+    <div class="util-row">
+      <div class="util-pct" id="utilPct">0%</div>
+      <div class="util-detail" id="utilDetail">0 / 0 ft²</div>
+    </div>
+  </div>
+
+  <!-- Work area live banner -->
+  <div id="dashWorkArea"></div>
+
+  <!-- Quick actions -->
+  <div class="quick-actions">
+    <div class="action-card" onclick="App.showView('inventory')">
+      <div class="action-icon blue">📦</div>
+      <div><div class="action-card-title">View Inventory</div><div class="action-card-sub" id="qaItemCount">Loading…</div></div>
+    </div>
+    <div class="action-card" onclick="App.bulkAiPack()">
+      <div class="action-icon green">⚡</div>
+      <div><div class="action-card-title">AI Auto-Place All</div><div class="action-card-sub" id="qaUnassigned">Place unassigned items</div></div>
+    </div>
+    <div class="action-card" onclick="App.showView('placement')">
+      <div class="action-icon blue">📍</div>
+      <div><div class="action-card-title">Manage Placement</div><div class="action-card-sub" id="qaLocCount">Loading…</div></div>
+    </div>
+    <div class="action-card" onclick="App.exportCSV()">
+      <div class="action-icon green">📊</div>
+      <div><div class="action-card-title">Export CSV</div><div class="action-card-sub">Download full inventory report</div></div>
+    </div>
+    <div class="action-card" onclick="App.showView('cvalerts')">
+      <div class="action-icon amber">📷</div>
+      <div><div class="action-card-title">CV Alerts</div><div class="action-card-sub">Computer vision monitoring log</div></div>
+    </div>
+    <div class="action-card" onclick="App.showView('history')">
+      <div class="action-icon blue">📋</div>
+      <div><div class="action-card-title">Checkout History</div><div class="action-card-sub">Session transaction log</div></div>
+    </div>
+  </div>
+
+  <!-- TrackIT-style stat strip for live context -->
+  <div class="panel-section">
+    <div class="panel-section-label">Live Status <span class="tag">AUTO-REFRESH 10s</span></div>
+    <div class="stat-strip">
+      <div class="stat-block"><div class="stat-num" id="v-items">—</div><div class="stat-lbl">Total Items</div></div>
+      <div class="stat-block"><div class="stat-num purple" id="v-work">—</div><div class="stat-lbl">In Work Area</div></div>
+      <div class="stat-block"><div class="stat-num warn" id="v-alerts">—</div><div class="stat-lbl">CV Missing Alerts</div></div>
+      <div class="stat-block"><div class="stat-num" id="v-locs">—</div><div class="stat-lbl">Storage Locations</div></div>
+    </div>
+  </div>
+
+  <!-- Recent CV alerts + work area items side-by-side -->
+  <div class="two-col">
+    <div class="panel-section">
+      <div class="panel-section-label">Active Work Area Items <span class="tag">LIVE</span></div>
+      <div id="work-items-overview">
+        <div class="empty-state" style="font-size:13px;padding:20px;color:var(--muted)">Work area is empty.</div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-label">Recent CV Alerts <span class="tag">LAST 8</span></div>
+      <div id="alert-list-overview">
+        <div class="alert-empty">No alerts on record.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     VIEW: INVENTORY
+════════════════════════════════════════════════════ -->
+<div class="view" id="view-inventory">
+  <div class="topbar-row">
+    <div class="page-heading" style="margin-bottom:0">Inventory — All Items</div>
+    <div class="topbar-actions">
+      <button class="tk-btn" onclick="App.exportCSV()">↓ Export CSV</button>
+    </div>
+  </div>
+
+  <div class="stat-strip" style="margin-bottom:16px">
+    <div class="stat-block"><div class="stat-num" id="v-items-inv">—</div><div class="stat-lbl">Total Items</div></div>
+    <div class="stat-block"><div class="stat-num" id="v-items-filtered">—</div><div class="stat-lbl">Showing</div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by part number or description…" oninput="App.onInventorySearch()">
+    </div>
+    <div class="filter-chips">
+      <div class="chip active" onclick="App.setInventoryFilter(this,'ALL')">All</div>
+      <div class="chip" onclick="App.setInventoryFilter(this,'IN_STORAGE')">Stored</div>
+      <div class="chip" onclick="App.setInventoryFilter(this,'NOT_STORED')">Unassigned</div>
+      <div class="chip" onclick="App.setInventoryFilter(this,'IN_WORK_AREA')">Work Area</div>
+    </div>
+  </div>
+
+  <div class="item-table">
+    <div class="item-table-head">
+      <span>Part #</span><span>Description</span><span>ft²</span><span>Price</span><span>Location</span><span>Actions</span>
+    </div>
+    <div id="inventoryList"></div>
+  </div>
+  <div class="section-note" id="inventoryNote"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     VIEW: PLACEMENT
+════════════════════════════════════════════════════ -->
+<div class="view" id="view-placement">
+  <div class="page-heading">Product Placement — AI-Powered Location Assignment</div>
+
+  <div class="ai-bar">
+    <div class="ai-bar-label">⚡ AI Place by Part #</div>
+    <input type="text" id="aiBarPN" placeholder="Enter part number…" autocomplete="off">
+    <button class="btn-lg btn-lg-green" onclick="App.aiPlaceByPN()">Place with AI</button>
+    <button class="btn-lg btn-lg-outline" onclick="App.bulkAiPack()">Bulk Auto-Pack (LAFF)</button>
+  </div>
+
+  <div class="loc-grid" id="locGrid"></div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     VIEW: WORK AREA
+════════════════════════════════════════════════════ -->
+<div class="view" id="view-workarea">
+  <div class="topbar-row">
+    <div class="page-heading" style="margin-bottom:0">Work Area — Active Checkouts</div>
+    <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">AUTO-REFRESH 10s</span>
+  </div>
+
+  <div class="stat-strip" style="margin-bottom:16px">
+    <div class="stat-block"><div class="stat-num purple" id="v-work-wa">—</div><div class="stat-lbl">Active Items</div></div>
+    <div class="stat-block"><div class="stat-num warn" id="v-work-overdue">0</div><div class="stat-lbl">Overdue</div></div>
+  </div>
+
+  <!-- Direct checkout/checkin forms (from server.js Work Area panel) -->
+  <div class="work-area-forms">
+    <div class="form-card">
+      <div class="form-card-title">Check Out</div>
+      <div class="form-card-desc">Enter a part number. A 15-minute timer starts immediately.</div>
+      <div class="input-row">
+        <input class="mono-input" id="checkout-direct-input" placeholder="PART NUMBER" autocomplete="off">
+        <button class="btn-lg btn-lg-primary" onclick="App.directCheckout()">Check Out</button>
+      </div>
+      <div class="direct-result" id="checkout-direct-result"></div>
+    </div>
+    <div class="form-card">
+      <div class="form-card-title">Check In</div>
+      <div class="form-card-desc">Return an item from the work area. Timer stops and time is logged.</div>
+      <div class="input-row">
+        <input class="mono-input" id="checkin-direct-input" placeholder="PART NUMBER" autocomplete="off">
+        <button class="btn-lg btn-lg-green" onclick="App.directCheckin()">Check In</button>
+      </div>
+      <div class="direct-result" id="checkin-direct-result"></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- TrackIT-style live work items -->
+  <div class="panel-section">
+    <div class="panel-section-label">Active Items <span class="tag">LIVE TIMERS</span></div>
+    <div id="work-items-wa"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- WWT-style full table (original view) -->
+  <div class="panel-section">
+    <div class="panel-section-label">Full Table View</div>
+    <div class="wa-full-card">
+      <div class="wa-table-head">
+        <span>Part #</span><span>Description</span><span>Value</span><span>Return To</span><span>Timer</span><span>Action</span>
+      </div>
+      <div id="workAreaList"></div>
+    </div>
+    <div class="wa-summary" id="waSummary"></div>
+    <div class="section-note">Work area refreshes every 10 seconds. Items overdue past 15 minutes are flagged in red.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     VIEW: CV ALERTS  (from index.html + server.js)
+════════════════════════════════════════════════════ -->
+<div class="view" id="view-cvalerts">
+  <div class="topbar-row">
+    <div class="page-heading" style="margin-bottom:0">Computer Vision Alerts</div>
+    <div class="topbar-actions">
+      <button class="tk-btn" onclick="App.simulateCVAlert()">+ Simulate Alert</button>
+      <button class="tk-btn tk-btn-accent" onclick="App.exportAlerts()">↓ Export CSV</button>
+    </div>
+  </div>
+
+  <!-- CV info card (explains the Python CV system) -->
+  <div class="cv-info-card">
+    <div class="cv-info-title">📷 Computer Vision Monitoring System</div>
+    <div class="cv-info-desc">
+      Alerts below are generated by <code>computer-vision.py</code>, which monitors storage locations via webcam
+      and detects when items go missing using baseline image comparison (OpenCV). The CV script posts alerts
+      to the server API (<code>POST /api/alert</code>), which are logged in <code>alerts-compvis.csv</code>.
+    </div>
+    <div class="cv-info-code">
+      SERVER_URL = 'https://autoflagger.onrender.com' · ALERT_COOLDOWN = 90s · STABILIZATION_DELAY = 2s
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div class="stat-strip" style="margin-bottom:20px">
+    <div class="stat-block"><div class="stat-num warn" id="v-cv-total">—</div><div class="stat-lbl">Total Alerts</div></div>
+    <div class="stat-block"><div class="stat-num warn" id="v-cv-missing">—</div><div class="stat-lbl">MISSING</div></div>
+    <div class="stat-block"><div class="stat-num ok"   id="v-cv-present">—</div><div class="stat-lbl">PRESENT</div></div>
+    <div class="stat-block"><div class="stat-num"      id="v-cv-filtered">—</div><div class="stat-lbl">Filtered</div></div>
+  </div>
+
+  <div class="cv-panel-grid">
+    <!-- Alert log -->
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <div class="panel-card-title">Alert Log</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="alert-filter-count" id="alert-filter-count"></span>
+          <span class="panel-card-tag">alerts-compvis.csv</span>
+        </div>
+      </div>
+      <div class="alert-search-bar">
+        <input id="alert-search" placeholder="Filter by location or status…" oninput="App.onAlertSearch()">
+        <button class="btn btn-primary" onclick="App.clearAlertSearch()" title="Clear">✕</button>
+      </div>
+      <div class="alert-list scrollable" id="alert-list-cv">
+        <div class="alert-empty">Loading alerts…</div>
+      </div>
+      <div class="cv-actions-bar">
+        <button class="tk-btn" onclick="App.simulateCVAlert()">+ Simulate Alert</button>
+        <button class="tk-btn tk-btn-accent" onclick="App.exportAlerts()">↓ Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Breakdown by location -->
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <div class="panel-card-title">Breakdown by Location</div>
+        <span class="panel-card-tag">ALL TIME</span>
+      </div>
+      <div class="breakdown-wrap">
+        <table class="breakdown-table">
+          <thead><tr><th>Location</th><th>Missing</th><th>Present</th><th>Total</th></tr></thead>
+          <tbody id="alert-breakdown-body">
+            <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:16px">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     VIEW: LOCATIONS  (from index.html)
+════════════════════════════════════════════════════ -->
+<div class="view" id="view-locations">
+  <div class="topbar-row">
+    <div class="page-heading" style="margin-bottom:0">Location Capacity</div>
+    <div class="topbar-actions">
+      <button class="tk-btn" id="loc-sort-btn" onclick="App.toggleLocSort()">SORT: DEFAULT</button>
+    </div>
+  </div>
+
+  <div class="stat-strip" style="margin-bottom:20px">
+    <div class="stat-block"><div class="stat-num" id="v-locs-loc">—</div><div class="stat-lbl">Total Locations</div></div>
+    <div class="stat-block"><div class="stat-num warn" id="v-locs-high">—</div><div class="stat-lbl">High (&gt;80%)</div></div>
+    <div class="stat-block"><div class="stat-num ok"   id="v-locs-low">—</div><div class="stat-lbl">Available (&lt;40%)</div></div>
+  </div>
+
+  <div class="trackit-loc-grid" id="loc-grid-main">
+    <div class="empty-state">Loading locations…</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     VIEW: HISTORY  (from index.html)
+════════════════════════════════════════════════════ -->
+<div class="view" id="view-history">
+  <div class="topbar-row">
+    <div class="page-heading" style="margin-bottom:0">Checkout History</div>
+    <div class="topbar-actions">
+      <button class="tk-btn tk-btn-danger" onclick="App.clearHistory()">✕ Clear Log</button>
+    </div>
+  </div>
+
+  <div class="stat-strip" style="margin-bottom:20px">
+    <div class="stat-block"><div class="stat-num" id="v-hist-total">0</div><div class="stat-lbl">Total Transactions</div></div>
+    <div class="stat-block"><div class="stat-num warn" id="v-hist-late">0</div><div class="stat-lbl">Late Returns</div></div>
+    <div class="stat-block"><div class="stat-num ok" id="v-hist-ontime">0</div><div class="stat-lbl">On-Time Returns</div></div>
+  </div>
+
+  <div class="panel-section">
+    <div class="panel-section-label">Transaction Log <span class="tag">SESSION ONLY</span></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div class="trackit-history-row" style="background:var(--off);border-bottom:2px solid var(--border);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.8px">
+        <span>Time</span><span>Part #</span><span>Description</span><span>Elapsed</span><span>Status</span>
+      </div>
+      <div id="history-list" class="scrollable"></div>
+    </div>
+  </div>
+
+  <div class="section-note">History is stored in session only (localStorage). Clears on browser close or manual reset.</div>
+  <div style="margin-top:16px;text-align:center">
+    <button class="tk-btn" onclick="App.resetState()">⚠ Reset All Placement Data to CSV</button>
+  </div>
+</div>
+
+</div><!-- .main -->
+</div><!-- .app-body -->
+
+<!-- ══════════════════════════════════════════════════
+     SCRIPTS (order matters: deps before app)
+════════════════════════════════════════════════════ -->
+<script src="js/csv-parser.js"></script>
+<script src="js/state.js"></script>
+<script src="js/gemini.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
