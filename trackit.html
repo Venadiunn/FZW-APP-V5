@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrackIT — WWT Distribution Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue:#003087;--blue-mid:#0047BB;--blue-light:#E8EEF8;
+    --red:#C8102E;--green:#007A39;--amber:#D97706;
+    --white:#fff;--off:#F4F6FA;--border:#D1D9E6;
+    --text:#0D1B3E;--muted:#5A6A8A;--card:#fff;
+    --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);background:var(--off);color:var(--text);min-height:100vh;
+    background-image:linear-gradient(rgba(0,48,135,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,48,135,.04) 1px,transparent 1px);
+    background-size:32px 32px}
+  /* NAV */
+  .nav{background:var(--blue);height:56px;display:flex;align-items:center;padding:0 24px;gap:16px;
+    position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  .nav-logo{font-family:var(--mono);font-weight:700;font-size:18px;color:#fff;letter-spacing:3px;margin-right:8px}
+  .nav-sep{width:1px;height:24px;background:rgba(255,255,255,.2)}
+  .nav-title{font-size:13px;color:rgba(255,255,255,.75);font-weight:500}
+  .nav-tabs{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+  .nav-tab{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;
+    color:rgba(255,255,255,.6);cursor:pointer;border:none;background:none;transition:all .15s;font-family:var(--sans)}
+  .nav-tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+  .nav-tab.active{color:#fff;background:rgba(255,255,255,.18)}
+  /* LAYOUT */
+  .main{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
+  .view{display:none}.view.active{display:block;animation:fadeIn .2s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  /* PAGE HEADING */
+  .page-heading{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:2px;
+    text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+  /* STATS */
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:18px 20px;border-top:3px solid var(--blue)}
+  .stat-card.green{border-top-color:var(--green)}.stat-card.amber{border-top-color:var(--amber)}.stat-card.red{border-top-color:var(--red)}
+  .stat-label{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .stat-value{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--text)}
+  /* UTIL */
+  .util-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:20px}
+  .util-label{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+  .util-bar-bg{height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+  .util-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue-mid),var(--blue));border-radius:5px;transition:width .6s ease}
+  .util-row{display:flex;justify-content:space-between;margin-top:8px}
+  .util-pct{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--blue)}
+  .util-detail{font-size:13px;color:var(--muted);align-self:flex-end}
+  /* QUICK ACTIONS */
+  .quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+  .action-card{background:var(--card);border:1px solid var(--border);border-radius:10px;
+    padding:18px 20px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:16px}
+  .action-card:hover{border-color:var(--blue-mid);box-shadow:0 2px 12px rgba(0,71,187,.12);transform:translateY(-1px)}
+  .action-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .action-icon.blue{background:var(--blue-light)}.action-icon.green{background:#E6F4EE}.action-icon.amber{background:#FFF3E0}.action-icon.red{background:#FFF0F0}
+  .action-card-title{font-size:14px;font-weight:600;color:var(--text)}
+  .action-card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  /* WORK AREA BANNER */
+  .work-area-card{background:#FFF8E7;border:1px solid #F5C842;border-radius:10px;padding:16px 20px;margin-bottom:20px}
+  .work-area-card.overdue{background:#FFF0F0;border-color:var(--red)}
+  .work-area-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .work-area-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .work-area-item{display:flex;justify-content:space-between;align-items:center;
+    padding:8px 12px;background:rgba(255,255,255,.7);border-radius:6px;margin-bottom:6px;
+    border:1px solid rgba(245,200,66,.4);cursor:pointer}
+  .work-area-item:hover{background:rgba(255,255,255,.95)}
+  .work-area-item.overdue{border-color:rgba(200,16,46,.3)}
+  .wa-pn{font-family:var(--mono);font-size:12px;font-weight:600}
+  .wa-desc{font-size:12px;color:var(--muted)}
+  .wa-timer{font-family:var(--mono);font-size:12px;font-weight:700}
+  .timer-ok{color:var(--amber)}.timer-late{color:var(--red)}
+  /* TOOLBAR */
+  .toolbar{display:flex;gap:10px;margin-bottom:16px;align-items:center}
+  .search-box{flex:1;position:relative}
+  .search-box input{width:100%;padding:9px 12px 9px 36px;border:1px solid var(--border);border-radius:8px;
+    font-size:14px;font-family:var(--sans);color:var(--text);background:var(--card);outline:none;transition:border .15s}
+  .search-box input:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(0,71,187,.1)}
+  .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--muted);pointer-events:none}
+  .filter-chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);
+    background:var(--card);cursor:pointer;transition:all .15s;color:var(--muted)}
+  .chip:hover{border-color:var(--blue-mid);color:var(--blue)}
+  .chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+  /* ITEM TABLE */
+  .item-table{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .item-table-head{display:grid;grid-template-columns:130px 1fr 70px 90px 140px 170px;
+    padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);
+    font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .item-row{display:grid;grid-template-columns:130px 1fr 70px 90px 140px 170px;
+    padding:11px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s}
+  .item-row:last-child{border-bottom:none}
+  .item-row:hover{background:var(--blue-light)}
+  .item-pn{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue)}
+  .item-desc{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px}
+  .item-area{font-family:var(--mono);font-size:12px}
+  .item-price{font-family:var(--mono);font-size:12px;font-weight:600}
+  .item-loc{font-size:12px;color:var(--muted)}
+  .item-actions{display:flex;gap:5px;flex-wrap:wrap}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .badge-stored{background:#E6F4EE;color:var(--green)}
+  .badge-unstored{background:#FFF3E0;color:var(--amber)}
+  .badge-workarea{background:#FFF0F0;color:var(--red)}
+  /* BUTTONS */
+  .btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid;
+    cursor:pointer;transition:all .12s;font-family:var(--sans);white-space:nowrap}
+  .btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-primary:hover{background:var(--blue-mid)}
+  .btn-green{background:#E6F4EE;color:var(--green);border-color:#B8DEC9}.btn-green:hover{background:var(--green);color:#fff}
+  .btn-amber{background:#FFF3E0;color:var(--amber);border-color:#F5C842}.btn-amber:hover{background:var(--amber);color:#fff}
+  .btn-red{background:#FFF0F0;color:var(--red);border-color:#F5C8C8}.btn-red:hover{background:var(--red);color:#fff}
+  .btn-muted{background:var(--off);color:var(--muted);border-color:var(--border)}.btn-muted:hover{border-color:var(--blue);color:var(--blue)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn-lg{padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;border:none;cursor:pointer;font-family:var(--sans);transition:all .15s}
+  .btn-lg-primary{background:var(--blue);color:#fff}.btn-lg-primary:hover{background:var(--blue-mid)}
+  .btn-lg-green{background:var(--green);color:#fff}.btn-lg-green:hover{background:#005A2B}
+  .btn-lg-outline{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-lg-outline:hover{border-color:var(--blue);color:var(--blue)}
+  /* PLACEMENT */
+  .ai-bar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;
+    margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ai-bar-label{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .ai-bar input{flex:1;min-width:160px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;
+    font-size:14px;font-family:var(--mono);color:var(--text);background:var(--off);outline:none}
+  .ai-bar input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,122,57,.1)}
+  .loc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .loc-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .loc-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;transition:background .1s;border-bottom:1px solid var(--border)}
+  .loc-header:hover{background:var(--blue-light)}
+  .loc-header-left{display:flex;align-items:center;gap:12px}
+  .loc-index{width:32px;height:32px;border-radius:8px;background:var(--blue);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700}
+  .loc-name{font-size:14px;font-weight:600}.loc-count{font-size:12px;color:var(--muted)}
+  .loc-pct{font-family:var(--mono);font-size:16px;font-weight:700}
+  .loc-bar-bg{height:4px;background:var(--border)}.loc-bar-fill{height:100%;transition:width .4s ease}
+  .loc-meta{display:flex;justify-content:space-between;padding:6px 16px}
+  .loc-meta-text{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .loc-items{padding:0 16px 12px;border-top:1px solid var(--border);background:var(--off);display:none}
+  .loc-items.open{display:block}
+  .loc-items-header{padding:10px 0 6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .loc-item-row{display:flex;justify-content:space-between;align-items:center;
+    padding:7px 10px;background:var(--card);border-radius:6px;margin-bottom:5px;border:1px solid var(--border)}
+  .loc-item-pn{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--blue)}
+  .loc-item-desc{font-size:12px;color:var(--text);flex:1;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .loc-item-area{font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0;margin-right:8px}
+  .loc-empty{padding:16px 0;text-align:center;color:var(--muted);font-size:13px}
+  /* WORK AREA VIEW */
+  .wa-full-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+  .wa-table-head{display:grid;grid-template-columns:130px 1fr 90px 110px 120px 110px;
+    padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);
+    font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .wa-row{display:grid;grid-template-columns:130px 1fr 90px 110px 120px 110px;
+    padding:12px 16px;border-bottom:1px solid var(--border);align-items:center}
+  .wa-row:last-child{border-bottom:none}
+  .wa-row.overdue{background:#FFF5F5}
+  .wa-summary{display:flex;gap:24px;padding:14px 20px;background:var(--off);border-top:1px solid var(--border);font-size:13px}
+  .wa-summary-item{display:flex;gap:6px;align-items:center}
+  .wa-summary-label{color:var(--muted)}.wa-summary-value{font-family:var(--mono);font-weight:700}
+  /* DIRECT CHECKOUT FORM */
+  .direct-form{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+  .direct-form-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px}
+  .direct-form-row{display:flex;gap:10px;align-items:center}
+  .direct-form-row input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--mono);color:var(--text);background:var(--off);outline:none}
+  .direct-form-row input:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(0,71,187,.1)}
+  /* CV ALERTS */
+  .alert-info-card{background:#E8EEF8;border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.6}
+  .alert-info-card strong{color:var(--text)}
+  .alert-table{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+  .alert-table-head{display:grid;grid-template-columns:180px 1fr 100px;
+    padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);
+    font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .alert-row{display:grid;grid-template-columns:180px 1fr 100px;
+    padding:10px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:13px}
+  .alert-row:last-child{border-bottom:none}
+  .alert-row:hover{background:var(--blue-light)}
+  .alert-ts{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .badge-missing{background:#FFF0F0;color:var(--red)}
+  .badge-present{background:#E6F4EE;color:var(--green)}
+  /* BREAKDOWN TABLE */
+  .breakdown-table{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .breakdown-head{display:grid;grid-template-columns:1fr 80px 80px 80px;
+    padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);
+    font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .breakdown-row{display:grid;grid-template-columns:1fr 80px 80px 80px;
+    padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:center}
+  .breakdown-row:last-child{border-bottom:none}
+  .breakdown-row:hover{background:var(--blue-light)}
+  /* HISTORY */
+  .history-table{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .history-head{display:grid;grid-template-columns:150px 130px 1fr 90px 100px;
+    padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);
+    font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+  .history-row{display:grid;grid-template-columns:150px 130px 1fr 90px 100px;
+    padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:center}
+  .history-row:last-child{border-bottom:none}
+  .history-row:hover{background:var(--blue-light)}
+  .badge-late{background:#FFF0F0;color:var(--red)}
+  .badge-ontime{background:#E6F4EE;color:var(--green)}
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,27,62,.55);z-index:200;
+    align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--card);border-radius:14px;padding:28px;max-width:480px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.25);animation:modalIn .2s ease}
+  @keyframes modalIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-title{font-size:18px;font-weight:700;margin-bottom:4px}
+  .modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .modal-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px}
+  .modal-loc-list{max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:16px}
+  .modal-loc-row{display:flex;justify-content:space-between;align-items:center;
+    padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;font-size:13px}
+  .modal-loc-row:last-child{border-bottom:none}
+  .modal-loc-row:hover{background:var(--blue-light)}
+  .modal-loc-row.selected{background:var(--blue-light);font-weight:600}
+  .modal-loc-row.disabled{opacity:.4;cursor:not-allowed}
+  .modal-loc-name{font-weight:500}.modal-loc-space{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+  /* AI */
+  .ai-thinking{display:none;align-items:center;gap:10px;padding:12px 16px;background:#E8F4EE;
+    border-radius:8px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px}
+  .ai-thinking.show{display:flex}
+  .spinner{width:16px;height:16px;border:2px solid rgba(0,122,57,.2);border-top-color:var(--green);
+    border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  /* LOADING SCREEN */
+  .loading-screen{position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;z-index:999;transition:opacity .4s}
+  .loading-screen.hidden{opacity:0;pointer-events:none}
+  .loading-logo{font-family:var(--mono);font-size:32px;font-weight:700;color:#fff;letter-spacing:6px;margin-bottom:8px}
+  .loading-sub{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:32px;font-family:var(--mono)}
+  .loading-bar-bg{width:280px;height:4px;background:rgba(255,255,255,.2);border-radius:2px}
+  .loading-bar-fill{height:100%;background:#fff;border-radius:2px;width:0;transition:width .1s linear}
+  .loading-status{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);margin-top:12px}
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;right:24px;z-index:300;background:var(--text);color:#fff;
+    padding:12px 20px;border-radius:8px;font-size:14px;font-weight:500;
+    box-shadow:0 4px 20px rgba(0,0,0,.25);transform:translateY(20px);opacity:0;
+    transition:all .25s;pointer-events:none;max-width:340px}
+  .toast.success{background:var(--green)}.toast.error{background:var(--red)}.toast.warning{background:var(--amber)}
+  .toast.show{transform:none;opacity:1}
+  /* TWO COL */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  /* MISC */
+  .section-note{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+  .empty-state{text-align:center;padding:40px;color:var(--muted)}
+  .empty-icon{font-size:40px;margin-bottom:10px}.empty-text{font-size:14px}
+  .section-heading{font-size:13px;font-weight:700;color:var(--text);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.5px}
+  @media(max-width:768px){
+    .stat-row{grid-template-columns:1fr 1fr}
+    .quick-actions{grid-template-columns:1fr}
+    .loc-grid{grid-template-columns:1fr}
+    .item-table-head,.item-row{grid-template-columns:110px 1fr 130px 130px}
+    .item-table-head span:nth-child(3),.item-row>*:nth-child(3),
+    .item-table-head span:nth-child(4),.item-row>*:nth-child(4){display:none}
+    .wa-table-head,.wa-row{grid-template-columns:110px 1fr 110px 100px}
+    .wa-table-head span:nth-child(3),.wa-row>*:nth-child(3),
+    .wa-table-head span:nth-child(4),.wa-row>*:nth-child(4){display:none}
+    .nav-tab{padding:6px 8px;font-size:12px}
+    .two-col{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-logo">TrackIT</div>
+  <div class="loading-sub">WWT Distribution Hub v2.0</div>
+  <div class="loading-bar-bg"><div class="loading-bar-fill" id="loadBar"></div></div>
+  <div class="loading-status" id="loadStatus">Initializing...</div>
+</div>
+
+<nav class="nav">
+  <span class="nav-logo">WWT</span>
+  <div class="nav-sep"></div>
+  <span class="nav-title">TrackIT</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showView('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showView('inventory')">Inventory</button>
+    <button class="nav-tab" onclick="showView('placement')">Placement</button>
+    <button class="nav-tab" onclick="showView('workarea')">Work Area</button>
+    <button class="nav-tab" onclick="showView('alerts')">CV Alerts <span id="alertBadge" style="display:none;background:var(--red);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;margin-left:4px"></span></button>
+    <button class="nav-tab" onclick="showView('history')">History</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- MOVE MODAL -->
+<div class="modal-overlay" id="moveModal">
+  <div class="modal">
+    <div class="modal-title">Move Item</div>
+    <div class="modal-sub" id="moveModalSub"></div>
+    <div class="modal-label">Select Destination Location</div>
+    <div class="modal-loc-list" id="moveLocList"></div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="closeModal('moveModal')">Cancel</button>
+      <button class="btn-lg btn-lg-primary" id="moveConfirmBtn" onclick="confirmMove()" disabled>Move Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal">
+    <div class="modal-title">Check Out to Work Area</div>
+    <div class="modal-sub" id="checkoutModalSub"></div>
+    <div style="background:#FFF8E7;border:1px solid #F5C842;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#92400E">
+      ⚠️ <strong>15-minute limit.</strong> Item must be returned to storage within 15 minutes.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="closeModal('checkoutModal')">Cancel</button>
+      <button class="btn-lg btn-lg-primary" onclick="confirmCheckout()">Check Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKIN MODAL -->
+<div class="modal-overlay" id="checkinModal">
+  <div class="modal">
+    <div class="modal-title">Check In from Work Area</div>
+    <div class="modal-sub" id="checkinModalSub"></div>
+    <div id="checkinTimingInfo" style="margin-bottom:20px"></div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="closeModal('checkinModal')">Cancel</button>
+      <button class="btn-lg btn-lg-green" onclick="confirmCheckin()">Check In</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI MODAL -->
+<div class="modal-overlay" id="aiModal">
+  <div class="modal">
+    <div class="modal-title">🤖 AI Location Suggestion</div>
+    <div class="modal-sub" id="aiModalSub"></div>
+    <div class="ai-thinking show" id="aiThinking">
+      <div class="spinner"></div>
+      Asking Gemini AI for best-fit location...
+    </div>
+    <div id="aiResultContent" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-lg btn-lg-outline" onclick="closeModal('aiModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div class="view active" id="view-dashboard">
+  <div class="page-heading">WWT Technology Distribution Hub — Dashboard</div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">—</div></div>
+    <div class="stat-card green"><div class="stat-label">In Storage</div><div class="stat-value" id="statStored">—</div></div>
+    <div class="stat-card amber"><div class="stat-label">Unassigned</div><div class="stat-value" id="statUnassigned">—</div></div>
+    <div class="stat-card red"><div class="stat-label">Work Area</div><div class="stat-value" id="statWorkArea">—</div></div>
+  </div>
+  <div class="util-card">
+    <div class="util-label">Warehouse Utilization</div>
+    <div class="util-bar-bg"><div class="util-bar-fill" id="utilBar" style="width:0%"></div></div>
+    <div class="util-row">
+      <div class="util-pct" id="utilPct">0%</div>
+      <div class="util-detail" id="utilDetail">0 / 0 ft²</div>
+    </div>
+  </div>
+  <div id="dashWorkArea"></div>
+  <div class="quick-actions">
+    <div class="action-card" onclick="showView('inventory')">
+      <div class="action-icon blue">📦</div>
+      <div><div class="action-card-title">View Inventory</div><div class="action-card-sub" id="qaItemCount">Loading...</div></div>
+    </div>
+    <div class="action-card" onclick="bulkAiPack()">
+      <div class="action-icon green">⚡</div>
+      <div><div class="action-card-title">AI Auto-Place All</div><div class="action-card-sub" id="qaUnassigned">Place unassigned items</div></div>
+    </div>
+    <div class="action-card" onclick="showView('placement')">
+      <div class="action-icon blue">📍</div>
+      <div><div class="action-card-title">Manage Placement</div><div class="action-card-sub" id="qaLocCount">Loading...</div></div>
+    </div>
+    <div class="action-card" onclick="exportCSV()">
+      <div class="action-icon green">📊</div>
+      <div><div class="action-card-title">Export CSV</div><div class="action-card-sub">Download full inventory report</div></div>
+    </div>
+    <div class="action-card" onclick="showView('alerts')">
+      <div class="action-icon amber">📷</div>
+      <div><div class="action-card-title">CV Alerts</div><div class="action-card-sub" id="qaCVAlerts">Computer vision monitoring log</div></div>
+    </div>
+    <div class="action-card" onclick="showView('history')">
+      <div class="action-icon red">📋</div>
+      <div><div class="action-card-title">Checkout History</div><div class="action-card-sub" id="qaHistory">Session transaction log</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- INVENTORY -->
+<div class="view" id="view-inventory">
+  <div class="page-heading">Inventory — All Items</div>
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search by part number or description..." oninput="renderInventory()">
+    </div>
+    <div class="filter-chips">
+      <div class="chip active" onclick="setFilter(this,'ALL')">All</div>
+      <div class="chip" onclick="setFilter(this,'IN_STORAGE')">Stored</div>
+      <div class="chip" onclick="setFilter(this,'NOT_STORED')">Unassigned</div>
+      <div class="chip" onclick="setFilter(this,'IN_WORK_AREA')">Work Area</div>
+    </div>
+  </div>
+  <div class="item-table">
+    <div class="item-table-head">
+      <span>Part #</span><span>Description</span><span>ft²</span><span>Price</span><span>Location</span><span>Actions</span>
+    </div>
+    <div id="inventoryList"></div>
+  </div>
+  <div class="section-note" id="inventoryNote"></div>
+</div>
+
+<!-- PLACEMENT -->
+<div class="view" id="view-placement">
+  <div class="page-heading">Product Placement — AI-Powered Location Assignment</div>
+  <div class="ai-bar">
+    <div class="ai-bar-label">⚡ AI Place by Part #</div>
+    <input type="text" id="aiBarPN" placeholder="Enter part number..." autocomplete="off">
+    <button class="btn-lg btn-lg-green" onclick="aiPlaceByPN()">Place with AI</button>
+    <button class="btn-lg btn-lg-outline" onclick="bulkAiPack()">Bulk Auto-Pack (LAFF)</button>
+  </div>
+  <div class="loc-grid" id="locGrid"></div>
+</div>
+
+<!-- WORK AREA -->
+<div class="view" id="view-workarea">
+  <div class="page-heading">Work Area — Active Checkouts</div>
+  <div class="two-col">
+    <div class="direct-form">
+      <div class="direct-form-title">⬆️ Check Out</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Enter a part number. A 15-minute timer starts immediately.</div>
+      <div class="direct-form-row">
+        <input type="text" id="directCheckoutPN" placeholder="Part number..." autocomplete="off" onkeydown="if(event.key==='Enter')directCheckout()">
+        <button class="btn-lg btn-lg-primary" onclick="directCheckout()">Check Out</button>
+      </div>
+    </div>
+    <div class="direct-form">
+      <div class="direct-form-title">⬇️ Check In</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Return an item from the work area. Timer stops and time is logged.</div>
+      <div class="direct-form-row">
+        <input type="text" id="directCheckinPN" placeholder="Part number..." autocomplete="off" onkeydown="if(event.key==='Enter')directCheckin()">
+        <button class="btn-lg btn-lg-green" onclick="directCheckin()">Check In</button>
+      </div>
+    </div>
+  </div>
+  <div class="wa-full-card">
+    <div class="wa-table-head">
+      <span>Part #</span><span>Description</span><span>Value</span><span>Return To</span><span>Time Status</span><span>Action</span>
+    </div>
+    <div id="workAreaList"></div>
+  </div>
+  <div class="wa-summary" id="waSummary"></div>
+  <div class="section-note">Work area refreshes every 10 seconds. Items overdue past 15 minutes are flagged in red.</div>
+</div>
+
+<!-- CV ALERTS -->
+<div class="view" id="view-alerts">
+  <div class="page-heading">Computer Vision Alerts</div>
+  <div class="alert-info-card">
+    📷 <strong>Computer Vision Monitoring System</strong><br>
+    Alerts below are generated by <strong>computer-vision.py</strong>, which monitors storage locations via webcam and detects when items go missing using baseline image comparison (OpenCV). The CV script posts alerts to the server API (<strong>POST /api/alert</strong>), which are logged in <strong>alerts-compvis.csv</strong>.<br>
+    <span style="font-family:var(--mono);font-size:11px">SERVER_URL = 'https://autoflagger.onrender.com' · ALERT_COOLDOWN = 90s · STABILIZATION_DELAY = 2s</span>
+  </div>
+  <div class="stat-row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-card"><div class="stat-label">Total Alerts</div><div class="stat-value" id="cvStatTotal">—</div></div>
+    <div class="stat-card red"><div class="stat-label">MISSING</div><div class="stat-value" id="cvStatMissing">—</div></div>
+    <div class="stat-card green"><div class="stat-label">PRESENT</div><div class="stat-value" id="cvStatPresent">—</div></div>
+    <div class="stat-card amber"><div class="stat-label">Filtered</div><div class="stat-value" id="cvStatFiltered">—</div></div>
+  </div>
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="alertSearch" placeholder="Filter by location or status..." oninput="renderAlerts()">
+    </div>
+    <button class="btn btn-amber" onclick="simulateAlert()">+ Simulate Alert</button>
+    <button class="btn btn-muted" onclick="exportAlerts()">Export CSV</button>
+  </div>
+  <div class="section-heading">Alert Log — alerts-compvis.csv</div>
+  <div class="alert-table">
+    <div class="alert-table-head"><span>Timestamp</span><span>Location</span><span>Status</span></div>
+    <div id="alertList"></div>
+  </div>
+  <div class="section-note" id="alertNote"></div>
+  <div class="section-heading" style="margin-top:24px">Breakdown by Location — ALL TIME</div>
+  <div class="breakdown-table">
+    <div class="breakdown-head"><span>Location</span><span>Missing</span><span>Present</span><span>Total</span></div>
+    <div id="alertBreakdown"></div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div class="view" id="view-history">
+  <div class="page-heading">Checkout History</div>
+  <div class="stat-row" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card"><div class="stat-label">Total Transactions</div><div class="stat-value" id="histStatTotal">0</div></div>
+    <div class="stat-card red"><div class="stat-label">Late Returns</div><div class="stat-value" id="histStatLate">0</div></div>
+    <div class="stat-card green"><div class="stat-label">On-Time Returns</div><div class="stat-value" id="histStatOnTime">0</div></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+    <button class="btn btn-muted" onclick="clearHistory()">Clear History</button>
+  </div>
+  <div class="history-table">
+    <div class="history-head"><span>Time</span><span>Part #</span><span>Description</span><span>Elapsed</span><span>Status</span></div>
+    <div id="historyList"></div>
+  </div>
+  <div class="section-note">History is stored in session only (sessionStorage). Clears on browser close.</div>
+</div>
+
+</div><!-- .main -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════
+const FIFTEEN_MS = 15 * 60 * 1000;
+const GEMINI_KEY = 'AIzaSyDPd44Nt5IsOT0XVmm5zroyHXNnpO0wS-g';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_KEY}`;
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let state = { items: [], locations: [], alerts: [], history: [] };
+
+// ═══════════════════════════════════════════════════
+// CSV PARSING
+// ═══════════════════════════════════════════════════
+function parseCSV(text) {
+  const lines = text.replace(/\r/g,'').split('\n').filter(l => l.trim());
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,''));
+  return lines.slice(1).map(line => {
+    const vals = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
+    return obj;
+  });
+}
+
+function parseCSVRaw(text) {
+  // headerless CSV
+  return text.replace(/\r/g,'').split('\n').filter(l=>l.trim()).map(line => {
+    const parts = line.split(',');
+    return { ts: parts[0]?.trim()||'', loc: parts[1]?.trim()||'', status: parts[2]?.trim()||'' };
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// BOOT / DATA LOADING
+// ═══════════════════════════════════════════════════
+async function boot() {
+  const bar = document.getElementById('loadBar');
+  const status = document.getElementById('loadStatus');
+
+  const setProgress = (pct, msg) => {
+    bar.style.width = pct + '%';
+    status.textContent = msg;
+  };
+
+  try {
+    setProgress(10, 'Loading items...');
+    const [itemsCSV, locsCSV, alertsCSV] = await Promise.all([
+      fetch('items_with_area.csv').then(r=>r.text()),
+      fetch('locations_with_areas.csv').then(r=>r.text()),
+      fetch('alerts-compvis.csv').then(r=>r.text()),
+    ]);
+
+    setProgress(50, 'Parsing data...');
+
+    const rawItems = parseCSV(itemsCSV);
+    const rawLocs  = parseCSV(locsCSV);
+    const rawAlerts = parseCSVRaw(alertsCSV);
+
+    setProgress(70, 'Building state...');
+
+    state.locations = rawLocs.map((l,i) => ({
+      id: i,
+      name: 'Storage Location ' + l['Location'],
+      locNum: l['Location'],
+      totalArea: parseFloat(l['Area (ft^2)']) || 0,
+      remainingArea: parseFloat(l['Area (ft^2)']) || 0,
+    }));
+
+    state.items = rawItems.map((r,i) => ({
+      id: i,
+      partNumber: r['PartNumber'] || '?',
+      description: r['Description'] || 'Unknown',
+      area: parseFloat(r['Area (ft^2)']) || 0,
+      price: parseFloat(r['Price']) || 0,
+      locationIndex: -1,
+      workAreaCheckoutTime: 0,
+    }));
+
+    state.alerts = rawAlerts.map(a => ({
+      ts: a.ts, loc: a.loc, status: a.status.toUpperCase(), live: false
+    }));
+
+    // Restore persisted state
+    loadPersistedState();
+
+    setProgress(90, 'Rendering...');
+
+    // Load session history
+    try {
+      const h = sessionStorage.getItem('trackit_history');
+      if (h) state.history = JSON.parse(h);
+    } catch(e){}
+
+    setProgress(100, 'Ready');
+    setTimeout(() => {
+      document.getElementById('loadingScreen').classList.add('hidden');
+      refreshAll();
+      startTimers();
+    }, 400);
+
+  } catch(err) {
+    // Fallback to seed data if CSV files not available
+    setProgress(60, 'CSV not found — using demo data...');
+    loadSeedData();
+    setProgress(100, 'Demo mode ready');
+    setTimeout(() => {
+      document.getElementById('loadingScreen').classList.add('hidden');
+      refreshAll();
+      startTimers();
+    }, 800);
+  }
+}
+
+function loadSeedData() {
+  state.locations = [
+    {id:0,name:'Storage Location 01',locNum:'01',totalArea:139,remainingArea:139},
+    {id:1,name:'Storage Location 02',locNum:'02',totalArea:51,remainingArea:51},
+    {id:2,name:'Storage Location 03',locNum:'03',totalArea:107,remainingArea:107},
+    {id:3,name:'Storage Location 04',locNum:'04',totalArea:73,remainingArea:73},
+    {id:4,name:'Storage Location 05',locNum:'05',totalArea:108,remainingArea:108},
+    {id:5,name:'Storage Location 06',locNum:'06',totalArea:128,remainingArea:128},
+    {id:6,name:'Storage Location 07',locNum:'07',totalArea:83,remainingArea:83},
+    {id:7,name:'Storage Location 08',locNum:'08',totalArea:53,remainingArea:53},
+    {id:8,name:'Storage Location 09',locNum:'09',totalArea:70,remainingArea:70},
+    {id:9,name:'Storage Location 10',locNum:'10',totalArea:83,remainingArea:83},
+    {id:10,name:'Storage Location 11',locNum:'11',totalArea:63,remainingArea:63},
+    {id:11,name:'Storage Location 12',locNum:'12',totalArea:89,remainingArea:89},
+    {id:12,name:'Storage Location 13',locNum:'13',totalArea:348,remainingArea:348},
+    {id:13,name:'Storage Location 14',locNum:'14',totalArea:178,remainingArea:178},
+    {id:14,name:'Storage Location 15',locNum:'15',totalArea:239,remainingArea:239},
+    {id:15,name:'Storage Location 16',locNum:'16',totalArea:367,remainingArea:367},
+    {id:16,name:'Storage Location 17',locNum:'17',totalArea:217,remainingArea:217},
+    {id:17,name:'Storage Location 18',locNum:'18',totalArea:174,remainingArea:174},
+    {id:18,name:'Storage Location 19',locNum:'19',totalArea:254,remainingArea:254},
+    {id:19,name:'Storage Location 20',locNum:'20',totalArea:250,remainingArea:250},
+    {id:20,name:'Storage Location 21',locNum:'21',totalArea:207,remainingArea:207},
+    {id:21,name:'Storage Location 22',locNum:'22',totalArea:292,remainingArea:292},
+    {id:22,name:'Storage Location 23',locNum:'23',totalArea:322,remainingArea:322},
+    {id:23,name:'Storage Location 24',locNum:'24',totalArea:162,remainingArea:162},
+    {id:24,name:'Storage Location 25',locNum:'25',totalArea:564,remainingArea:564},
+    {id:25,name:'Storage Location 26',locNum:'26',totalArea:579,remainingArea:579},
+    {id:26,name:'Storage Location 27',locNum:'27',totalArea:536,remainingArea:536},
+    {id:27,name:'Storage Location 28',locNum:'28',totalArea:620,remainingArea:620},
+    {id:28,name:'Storage Location 29',locNum:'29',totalArea:411,remainingArea:411},
+    {id:29,name:'Storage Location 30',locNum:'30',totalArea:410,remainingArea:410},
+    {id:30,name:'Storage Location 31',locNum:'31',totalArea:665,remainingArea:665},
+    {id:31,name:'Storage Location 32',locNum:'32',totalArea:747,remainingArea:747},
+    {id:32,name:'Storage Location 33',locNum:'33',totalArea:1378,remainingArea:1378},
+    {id:33,name:'Storage Location 34',locNum:'34',totalArea:1075,remainingArea:1075},
+    {id:34,name:'Storage Location 35',locNum:'35',totalArea:957,remainingArea:957},
+    {id:35,name:'Storage Location 36',locNum:'36',totalArea:1066,remainingArea:1066},
+  ];
+  const items = [
+    ['WWT-001','Dell PowerEdge R750 Server',12.5,8500],
+    ['WWT-002','Cisco Catalyst 9300 Switch',4.0,4200],
+    ['WWT-003','HP ProLiant DL380 Gen10',10.5,7200],
+    ['WWT-004','NetApp AFF A400 Storage Array',18.0,32000],
+    ['WWT-005','Juniper MX204 Router',6.0,9800],
+    ['WWT-006','Palo Alto PA-5250 Firewall',3.5,12500],
+    ['WWT-007','APC Smart-UPS 3000VA',5.5,1800],
+    ['WWT-008','Aruba 6300M Network Switch',2.5,3400],
+    ['WWT-009','Pure Storage FlashArray C20',14.0,41000],
+    ['WWT-010','Cisco UCS B200 M6 Blade Server',8.0,11200],
+    ['WWT-011','F5 BIG-IP 2000s Load Balancer',3.0,7600],
+    ['WWT-012','HPE Nimble Storage HF20H',9.0,18500],
+    ['WWT-013','Extreme Networks X460-G2',2.0,2900],
+    ['WWT-014','Nutanix NX-3155G-G8 Node',11.5,22000],
+    ['WWT-015','Fortinet FortiGate 600E',2.5,5400],
+    ['WWT-016','Dell EMC PowerStore 500T',16.0,28000],
+    ['WWT-017','Lenovo ThinkSystem SR650',10.0,6800],
+    ['WWT-018','Cisco Meraki MX450 Appliance',2.0,5100],
+    ['WWT-019','VMware vSAN ReadyNode 2U',8.5,14500],
+    ['WWT-020','Ribbon SBC 7000 Session Controller',5.0,9200],
+  ];
+  state.items = items.map((r,i) => ({ id:i, partNumber:r[0], description:r[1], area:r[2], price:r[3], locationIndex:-1, workAreaCheckoutTime:0 }));
+  state.alerts = [
+    {ts:'2026-02-03 21:46:51',loc:'Storage Location 1',status:'MISSING',live:false},
+    {ts:'2026-02-03 21:47:04',loc:'Storage Location 1',status:'MISSING',live:false},
+    {ts:'2026-02-04 18:08:37',loc:'Storage Location 1',status:'MISSING',live:false},
+    {ts:'2026-02-04 18:12:19',loc:'Storage Location 1',status:'PRESENT',live:false},
+    {ts:'2026-02-05 10:58:50',loc:'Storage Location 1',status:'MISSING',live:false},
+  ];
+  loadPersistedState();
+}
+
+// ═══════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════
+const STORAGE_KEY = 'trackit_state_v3';
+function saveState() {
+  const persist = state.items.map(i => ({
+    id: i.id, locationIndex: i.locationIndex, workAreaCheckoutTime: i.workAreaCheckoutTime
+  }));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(persist));
+}
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    saved.forEach(s => {
+      const item = state.items.find(i => i.id === s.id);
+      if (item) {
+        item.locationIndex = s.locationIndex;
+        item.workAreaCheckoutTime = s.workAreaCheckoutTime;
+      }
+    });
+    recomputeAreas();
+  } catch(e) {}
+}
+function recomputeAreas() {
+  state.locations.forEach(l => l.remainingArea = l.totalArea);
+  state.items.forEach(item => {
+    if (item.locationIndex !== -1) {
+      const loc = state.locations[item.locationIndex];
+      if (loc) loc.remainingArea = Math.max(0, loc.remainingArea - item.area);
+    }
+  });
+}
+function saveHistory() {
+  try { sessionStorage.setItem('trackit_history', JSON.stringify(state.history)); } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const isInWA   = i => i.workAreaCheckoutTime > 0;
+const getStatus = i => isInWA(i) ? 'IN_WORK_AREA' : i.locationIndex !== -1 ? 'IN_STORAGE' : 'NOT_STORED';
+const getLocName = i => isInWA(i) ? 'WORK AREA' : i.locationIndex !== -1 ? (state.locations[i.locationIndex]?.name||'?') : 'NOT STORED';
+const fmt$ = v => '$' + Number(v).toLocaleString('en-US');
+const fmtFt = v => Number(v).toFixed(1);
+const escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function getStats() {
+  const { items, locations } = state;
+  const totalArea = locations.reduce((s,l) => s+l.totalArea, 0);
+  const usedArea  = locations.reduce((s,l) => s+(l.totalArea-l.remainingArea), 0);
+  return {
+    total:      items.length,
+    stored:     items.filter(i => i.locationIndex !== -1 && !isInWA(i)).length,
+    unassigned: items.filter(i => i.locationIndex === -1 && !isInWA(i)).length,
+    workArea:   items.filter(isInWA).length,
+    totalArea, usedArea,
+    utilPct: totalArea > 0 ? Math.round(usedArea/totalArea*100) : 0,
+  };
+}
+
+// ═══════════════════════════════════════════════════
+// VIEW ROUTING
+// ═══════════════════════════════════════════════════
+const VIEWS = ['dashboard','inventory','placement','workarea','alerts','history'];
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-'+name)?.classList.add('active');
+  const idx = VIEWS.indexOf(name);
+  if (idx !== -1) document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
+  refreshAll();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderDashboard() {
+  const s = getStats();
+  document.getElementById('statTotal').textContent      = s.total;
+  document.getElementById('statStored').textContent     = s.stored;
+  document.getElementById('statUnassigned').textContent = s.unassigned;
+  document.getElementById('statWorkArea').textContent   = s.workArea;
+  document.getElementById('utilBar').style.width        = s.utilPct + '%';
+  document.getElementById('utilPct').textContent        = s.utilPct + '%';
+  document.getElementById('utilDetail').textContent     = `${s.usedArea.toFixed(1)} / ${s.totalArea.toFixed(1)} ft²`;
+  document.getElementById('qaItemCount').textContent    = `${s.total} items in inventory`;
+  document.getElementById('qaUnassigned').textContent   = `${s.unassigned} unassigned items ready to place`;
+  document.getElementById('qaLocCount').textContent     = `${state.locations.length} storage locations`;
+  const missing = state.alerts.filter(a => a.status === 'MISSING').length;
+  document.getElementById('qaCVAlerts').textContent     = `${state.alerts.length} alerts · ${missing} MISSING`;
+  document.getElementById('qaHistory').textContent      = `${state.history.length} transactions this session`;
+
+  const workItems = state.items.filter(isInWA);
+  const dashWA = document.getElementById('dashWorkArea');
+  if (!workItems.length) { dashWA.innerHTML = ''; return; }
+  const now = Date.now();
+  const hasOD = workItems.some(i => (now - i.workAreaCheckoutTime) > FIFTEEN_MS);
+  dashWA.innerHTML = `<div class="work-area-card ${hasOD?'overdue':''}">
+    <div class="work-area-header">
+      <span>${hasOD?'🚨':'⏱'}</span>
+      <span class="work-area-title" style="color:${hasOD?'var(--red)':'var(--amber)'}">Work Area — ${workItems.length} Item(s)${hasOD?' — OVERDUE':''}</span>
+    </div>
+    ${workItems.map(item => {
+      const elapsed=now-item.workAreaCheckoutTime, mins=Math.floor(elapsed/60000), rem=15-mins, late=elapsed>FIFTEEN_MS;
+      return `<div class="work-area-item ${late?'overdue':''}" onclick="openCheckinModal('${escHtml(item.partNumber)}')">
+        <div><div class="wa-pn">${escHtml(item.partNumber)}</div><div class="wa-desc">${escHtml(item.description)}</div></div>
+        <div class="wa-timer ${late?'timer-late':'timer-ok'}">${late?`OVERDUE ${Math.abs(rem)}m`:`${rem}m left`}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: INVENTORY
+// ═══════════════════════════════════════════════════
+let activeFilter = 'ALL';
+function setFilter(el, f) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  activeFilter = f;
+  renderInventory();
+}
+
+function renderInventory() {
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  const list = document.getElementById('inventoryList');
+  if (!list) return;
+  let items = state.items;
+  if (q) items = items.filter(i => i.partNumber.toLowerCase().includes(q) || i.description.toLowerCase().includes(q));
+  if (activeFilter !== 'ALL') items = items.filter(i => getStatus(i) === activeFilter);
+  // Show only first 200 for performance
+  const shown = items.slice(0, 200);
+  document.getElementById('inventoryNote').textContent = `Showing ${shown.length} of ${items.length} items (${state.items.length} total)`;
+  list.innerHTML = shown.map(item => {
+    const status = getStatus(item), inWA = isInWA(item);
+    const badge = status==='IN_STORAGE' ? 'badge-stored' : status==='IN_WORK_AREA' ? 'badge-workarea' : 'badge-unstored';
+    const btext = status==='IN_STORAGE' ? 'Stored' : status==='IN_WORK_AREA' ? '⏱ Work Area' : 'Unassigned';
+    return `<div class="item-row">
+      <div class="item-pn">${escHtml(item.partNumber)}</div>
+      <div class="item-desc" title="${escHtml(item.description)}">${escHtml(item.description)}</div>
+      <div class="item-area">${fmtFt(item.area)}</div>
+      <div class="item-price">${fmt$(item.price)}</div>
+      <div class="item-loc">
+        <span class="badge ${badge}">${btext}</span>
+        <div style="font-size:11px;margin-top:2px;color:var(--muted)">${escHtml(getLocName(item))}</div>
+      </div>
+      <div class="item-actions">
+        ${!inWA?`<button class="btn btn-primary" onclick="openMoveModal('${item.id}')">Move</button>`:''}
+        ${!inWA?`<button class="btn btn-green"   onclick="openAiModal('${item.id}')">AI</button>`:''}
+        ${!inWA?`<button class="btn btn-amber"   onclick="openCheckoutModal('${item.id}')">Out</button>`:''}
+        ${inWA ?`<button class="btn btn-red"     onclick="openCheckinModal('${item.partNumber}')">In</button>`:''}
+      </div>
+    </div>`;
+  }).join('') || `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No items match</div></div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: PLACEMENT
+// ═══════════════════════════════════════════════════
+function renderPlacement() {
+  const grid = document.getElementById('locGrid');
+  if (!grid) return;
+  grid.innerHTML = state.locations.map(loc => {
+    const locItems = state.items.filter(i => i.locationIndex === loc.id && !isInWA(i));
+    const pct = loc.totalArea > 0 ? Math.min(100, Math.round((loc.totalArea-loc.remainingArea)/loc.totalArea*100)) : 0;
+    const col = pct>=90?'var(--red)':pct>=60?'var(--amber)':'var(--green)';
+    return `<div class="loc-card">
+      <div class="loc-header" onclick="toggleLocItems(${loc.id})">
+        <div class="loc-header-left">
+          <div class="loc-index">${loc.locNum||loc.id}</div>
+          <div><div class="loc-name">${escHtml(loc.name)}</div><div class="loc-count">${locItems.length} item${locItems.length!==1?'s':''}</div></div>
+        </div>
+        <div class="loc-pct" style="color:${col}">${pct}%</div>
+      </div>
+      <div class="loc-bar-bg"><div class="loc-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="loc-meta">
+        <span class="loc-meta-text">Used ${(loc.totalArea-loc.remainingArea).toFixed(1)} ft²</span>
+        <span class="loc-meta-text">Free ${loc.remainingArea.toFixed(1)} ft²</span>
+        <span class="loc-meta-text">Total ${loc.totalArea.toFixed(1)} ft²</span>
+      </div>
+      <div class="loc-items" id="locItems-${loc.id}">
+        <div class="loc-items-header">Items at this location</div>
+        ${locItems.length===0?'<div class="loc-empty">No items stored here</div>':locItems.map(i=>`
+          <div class="loc-item-row">
+            <span class="loc-item-pn">${escHtml(i.partNumber)}</span>
+            <span class="loc-item-desc" title="${escHtml(i.description)}">${escHtml(i.description)}</span>
+            <span class="loc-item-area">${fmtFt(i.area)} ft²</span>
+            <button class="btn btn-amber" style="font-size:10px;padding:3px 7px" onclick="openCheckoutModal('${i.id}')">Out</button>
+            <button class="btn btn-green" style="font-size:10px;padding:3px 7px;margin-left:3px" onclick="openAiModal('${i.id}')">Re-Place</button>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleLocItems(id) {
+  document.getElementById(`locItems-${id}`)?.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: WORK AREA
+// ═══════════════════════════════════════════════════
+function renderWorkArea() {
+  const now = Date.now();
+  const workItems = state.items.filter(isInWA);
+  const list = document.getElementById('workAreaList');
+  const summary = document.getElementById('waSummary');
+  if (!list) return;
+  list.innerHTML = workItems.map(item => {
+    const elapsed=now-item.workAreaCheckoutTime, mins=Math.floor(elapsed/60000), rem=15-mins, late=elapsed>FIFTEEN_MS;
+    const retLoc = item.locationIndex !== -1 ? state.locations[item.locationIndex]?.name : 'NOT STORED';
+    return `<div class="wa-row ${late?'overdue':''}">
+      <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue)">${escHtml(item.partNumber)}</div>
+      <div style="font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${escHtml(item.description)}</div>
+      <div style="font-family:var(--mono);font-size:12px;font-weight:600">${fmt$(item.price)}</div>
+      <div style="font-size:12px;color:var(--muted)">${escHtml(retLoc)}</div>
+      <div class="wa-timer ${late?'timer-late':'timer-ok'}">${late?`OVERDUE ${Math.abs(rem)}m`:`${rem}m left`}</div>
+      <div><button class="btn btn-red" onclick="openCheckinModal('${escHtml(item.partNumber)}')">Check In</button></div>
+    </div>`;
+  }).join('') || `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">Work area is empty</div></div>`;
+  if (workItems.length > 0) {
+    const totalVal = workItems.reduce((s,i) => s+i.price, 0);
+    const overdue  = workItems.filter(i => (Date.now()-i.workAreaCheckoutTime) > FIFTEEN_MS).length;
+    summary.innerHTML = `
+      <div class="wa-summary-item"><span class="wa-summary-label">Items:</span><span class="wa-summary-value">${workItems.length}</span></div>
+      <div class="wa-summary-item"><span class="wa-summary-label">Total Value:</span><span class="wa-summary-value">${fmt$(totalVal)}</span></div>
+      <div class="wa-summary-item"><span class="wa-summary-label">Overdue:</span><span class="wa-summary-value" style="color:${overdue>0?'var(--red)':'var(--green)'}"> ${overdue}</span></div>`;
+  } else { summary.innerHTML = ''; }
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: CV ALERTS
+// ═══════════════════════════════════════════════════
+function renderAlerts() {
+  const q = (document.getElementById('alertSearch')?.value||'').toLowerCase();
+  let alerts = state.alerts;
+  if (q) alerts = alerts.filter(a => a.loc.toLowerCase().includes(q) || a.status.toLowerCase().includes(q));
+  const shown = alerts.slice(-100).reverse(); // most recent 100
+
+  document.getElementById('cvStatTotal').textContent   = state.alerts.length;
+  document.getElementById('cvStatMissing').textContent = state.alerts.filter(a=>a.status==='MISSING').length;
+  document.getElementById('cvStatPresent').textContent = state.alerts.filter(a=>a.status==='PRESENT').length;
+  document.getElementById('cvStatFiltered').textContent = alerts.length;
+
+  // Alert badge on nav
+  const missing = state.alerts.filter(a=>a.status==='MISSING').length;
+  const badge = document.getElementById('alertBadge');
+  badge.textContent = missing;
+  badge.style.display = missing > 0 ? 'inline' : 'none';
+
+  document.getElementById('alertNote').textContent = `Showing ${shown.length} of ${alerts.length} alerts`;
+  document.getElementById('alertList').innerHTML = shown.map(a => {
+    const isLive = a.live ? ' style="background:#F0FFF4"' : '';
+    return `<div class="alert-row"${isLive}>
+      <span class="alert-ts">${escHtml(a.ts)}</span>
+      <span>${escHtml(a.loc)}</span>
+      <span><span class="badge ${a.status==='MISSING'?'badge-missing':'badge-present'}">${a.status}</span></span>
+    </div>`;
+  }).join('') || `<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">No alerts match</div></div>`;
+
+  // Breakdown
+  const byLoc = {};
+  state.alerts.forEach(a => {
+    if (!byLoc[a.loc]) byLoc[a.loc] = { missing:0, present:0 };
+    if (a.status==='MISSING') byLoc[a.loc].missing++;
+    else byLoc[a.loc].present++;
+  });
+  document.getElementById('alertBreakdown').innerHTML = Object.entries(byLoc)
+    .sort((a,b) => (b[1].missing+b[1].present)-(a[1].missing+a[1].present))
+    .map(([loc,cnt]) => `<div class="breakdown-row">
+      <span>${escHtml(loc)}</span>
+      <span style="color:var(--red);font-weight:600">${cnt.missing}</span>
+      <span style="color:var(--green);font-weight:600">${cnt.present}</span>
+      <span>${cnt.missing+cnt.present}</span>
+    </div>`).join('') || `<div class="empty-state"><div class="empty-text">No data</div></div>`;
+}
+
+function simulateAlert() {
+  const locs = state.locations.length > 0 ? state.locations : [{name:'Storage Location 1'}];
+  const loc = locs[Math.floor(Math.random()*locs.length)].name;
+  const status = Math.random() > 0.4 ? 'MISSING' : 'PRESENT';
+  const now = new Date();
+  const ts = now.toISOString().replace('T',' ').substring(0,23);
+  state.alerts.push({ ts, loc, status, live: true });
+  renderAlerts();
+  toast(`📷 CV Alert simulated: ${status} at ${loc}`, status==='MISSING'?'error':'success');
+}
+
+function exportAlerts() {
+  const rows = state.alerts.map(a => `${a.ts},${a.loc},${a.status}`);
+  const csv = rows.join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), {href:url, download:'alerts-export.csv'});
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('✓ Exported alerts CSV','success');
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: HISTORY
+// ═══════════════════════════════════════════════════
+function renderHistory() {
+  const h = state.history;
+  document.getElementById('histStatTotal').textContent  = h.length;
+  document.getElementById('histStatLate').textContent   = h.filter(r=>r.late).length;
+  document.getElementById('histStatOnTime').textContent = h.filter(r=>!r.late).length;
+  document.getElementById('historyList').innerHTML = [...h].reverse().map(r => `
+    <div class="history-row">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${r.time}</span>
+      <span style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--blue)">${escHtml(r.partNumber)}</span>
+      <span style="font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${escHtml(r.description)}</span>
+      <span style="font-family:var(--mono);font-size:12px">${r.elapsed}m</span>
+      <span><span class="badge ${r.late?'badge-late':'badge-ontime'}">${r.late?'LATE':'ON TIME'}</span></span>
+    </div>`).join('') || `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No transactions yet</div></div>`;
+}
+
+function clearHistory() {
+  state.history = [];
+  saveHistory();
+  renderHistory();
+  toast('History cleared','success');
+}
+
+// ═══════════════════════════════════════════════════
+// OP: MOVE ITEM
+// ═══════════════════════════════════════════════════
+let moveTargetId = null, moveTargetLoc = null;
+function openMoveModal(itemId) {
+  const item = state.items.find(i => i.id == itemId);
+  if (!item) return toast('Item not found','error');
+  if (isInWA(item)) return toast('Item is in work area — check it in first','error');
+  moveTargetId = item.id; moveTargetLoc = null;
+  document.getElementById('moveModalSub').textContent = `${item.partNumber} · ${item.description} · ${fmtFt(item.area)} ft² · ${fmt$(item.price)}`;
+  document.getElementById('moveConfirmBtn').disabled = true;
+  const tempLocs = state.locations.map(l => ({...l}));
+  if (item.locationIndex !== -1) tempLocs[item.locationIndex].remainingArea += item.area;
+  document.getElementById('moveLocList').innerHTML = tempLocs.map(loc => {
+    const canFit = loc.remainingArea >= item.area;
+    const isCurr = loc.id === item.locationIndex;
+    return `<div class="modal-loc-row ${canFit?'':'disabled'}" onclick="${canFit?`selectMoveTarget(${loc.id})`:''}">
+      <span class="modal-loc-name">[${loc.locNum||loc.id}] ${escHtml(loc.name)}${isCurr?' (current)':''}</span>
+      <span class="modal-loc-space" style="color:${canFit?'var(--green)':'var(--red)'}">
+        ${fmtFt(loc.remainingArea)} ft² ${canFit?'✓':'✗'}
+      </span>
+    </div>`;
+  }).join('');
+  document.getElementById('moveModal').classList.add('open');
+}
+function selectMoveTarget(locId) {
+  moveTargetLoc = locId;
+  document.querySelectorAll('.modal-loc-row').forEach(r => r.classList.remove('selected'));
+  document.querySelectorAll('#moveLocList .modal-loc-row')[locId]?.classList.add('selected');
+  document.getElementById('moveConfirmBtn').disabled = false;
+}
+function confirmMove() {
+  const item = state.items.find(i => i.id === moveTargetId);
+  if (!item || moveTargetLoc === null) return;
+  const loc = state.locations[moveTargetLoc];
+  if (!loc || loc.remainingArea < item.area) return toast('Not enough space!','error');
+  if (item.locationIndex !== -1) state.locations[item.locationIndex].remainingArea += item.area;
+  item.locationIndex = moveTargetLoc;
+  state.locations[moveTargetLoc].remainingArea -= item.area;
+  saveState();
+  closeModal('moveModal');
+  toast(`✓ Moved to ${loc.name}`,'success');
+  refreshAll();
+}
+
+// ═══════════════════════════════════════════════════
+// OP: CHECK OUT
+// ═══════════════════════════════════════════════════
+let checkoutId = null;
+function openCheckoutModal(itemId) {
+  const item = state.items.find(i => i.id == itemId);
+  if (!item) return toast('Item not found','error');
+  if (isInWA(item)) return toast('Already in work area','error');
+  if (item.locationIndex === -1) return toast('Item must be in a storage location first','warning');
+  checkoutId = item.id;
+  document.getElementById('checkoutModalSub').textContent =
+    `${item.partNumber} · ${item.description} · ${fmt$(item.price)} · from ${state.locations[item.locationIndex]?.name}`;
+  document.getElementById('checkoutModal').classList.add('open');
+}
+function confirmCheckout() {
+  const item = state.items.find(i => i.id === checkoutId);
+  if (!item) return;
+  item.workAreaCheckoutTime = Date.now();
+  saveState();
+  closeModal('checkoutModal');
+  toast(`⏱ ${item.partNumber} checked out — 15 min limit started`,'warning');
+  refreshAll();
+}
+function directCheckout() {
+  const pn = document.getElementById('directCheckoutPN').value.trim();
+  if (!pn) return toast('Enter a part number','warning');
+  const item = state.items.find(i => i.partNumber.toLowerCase() === pn.toLowerCase());
+  if (!item) return toast('Part number not found','error');
+  if (isInWA(item)) return toast('Already in work area','error');
+  if (item.locationIndex === -1) return toast('Item must be stored first','warning');
+  item.workAreaCheckoutTime = Date.now();
+  document.getElementById('directCheckoutPN').value = '';
+  saveState();
+  toast(`⏱ ${item.partNumber} checked out — 15 min limit started`,'warning');
+  refreshAll();
+}
+
+// ═══════════════════════════════════════════════════
+// OP: CHECK IN
+// ═══════════════════════════════════════════════════
+let checkinPN = null;
+function openCheckinModal(pn) {
+  const item = state.items.find(i => i.partNumber === pn);
+  if (!item) return toast('Item not found','error');
+  if (!isInWA(item)) return toast('Item is not in work area','error');
+  checkinPN = pn;
+  const elapsed = Date.now() - item.workAreaCheckoutTime;
+  const minutes = Math.floor(elapsed / 60000);
+  const isLate  = elapsed > FIFTEEN_MS;
+  const retLoc  = item.locationIndex !== -1 ? state.locations[item.locationIndex]?.name : 'NOT STORED';
+  document.getElementById('checkinModalSub').textContent = `${item.partNumber} · ${item.description}`;
+  document.getElementById('checkinTimingInfo').innerHTML = isLate
+    ? `<div style="background:#FFF0F0;border:1px solid var(--red);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--red)">
+        <strong>⚠️ OVERDUE by ${minutes-15} minute(s)</strong> (${minutes} min elapsed)<br>Will be returned to: <strong>${escHtml(retLoc)}</strong></div>`
+    : `<div style="background:#E8F4EE;border:1px solid #B8DEC9;border-radius:8px;padding:12px 16px;font-size:13px;color:var(--green)">
+        ✓ <strong>On time</strong> — ${minutes} min elapsed, ${15-minutes} min remaining<br>Will be returned to: <strong>${escHtml(retLoc)}</strong></div>`;
+  document.getElementById('checkinModal').classList.add('open');
+}
+function confirmCheckin() {
+  const item = state.items.find(i => i.partNumber === checkinPN);
+  if (!item) return;
+  const elapsed = Date.now() - item.workAreaCheckoutTime;
+  const minutes = Math.floor(elapsed/60000);
+  const isLate  = elapsed > FIFTEEN_MS;
+  const retLoc  = item.locationIndex !== -1 ? state.locations[item.locationIndex]?.name : 'storage';
+  item.workAreaCheckoutTime = 0;
+  // Log history
+  const now = new Date();
+  state.history.push({
+    time: now.toLocaleTimeString(), partNumber: item.partNumber,
+    description: item.description, elapsed: minutes, late: isLate,
+  });
+  saveHistory();
+  saveState();
+  closeModal('checkinModal');
+  toast(isLate ? `⚠️ Late return — ${minutes-15}m overdue. Back to ${retLoc}` : `✓ Checked in on time (${minutes}m). Back to ${retLoc}`, isLate?'warning':'success');
+  refreshAll();
+}
+function directCheckin() {
+  const pn = document.getElementById('directCheckinPN').value.trim();
+  if (!pn) return toast('Enter a part number','warning');
+  const item = state.items.find(i => i.partNumber.toLowerCase() === pn.toLowerCase());
+  if (!item) return toast('Part number not found','error');
+  if (!isInWA(item)) return toast('Item is not in work area','error');
+  checkinPN = item.partNumber;
+  document.getElementById('directCheckinPN').value = '';
+  confirmCheckin();
+}
+
+// ═══════════════════════════════════════════════════
+// OP: AI SUGGEST (Gemini)
+// ═══════════════════════════════════════════════════
+let aiTargetId = null;
+function openAiModal(itemId) {
+  const item = state.items.find(i => i.id == itemId);
+  if (!item) return toast('Item not found','error');
+  if (isInWA(item)) return toast('Item is in work area','error');
+  aiTargetId = item.id;
+  document.getElementById('aiModalSub').textContent = `${item.partNumber} · ${item.description} · ${fmtFt(item.area)} ft²`;
+  document.getElementById('aiThinking').classList.add('show');
+  document.getElementById('aiResultContent').style.display = 'none';
+  document.getElementById('aiModal').classList.add('open');
+  callGemini(item.id);
+}
+
+async function callGemini(itemId) {
+  const item = state.items.find(i => i.id === itemId);
+  if (!item) return;
+  const tempLocs = state.locations.map(l => ({...l}));
+  if (item.locationIndex !== -1) tempLocs[item.locationIndex].remainingArea += item.area;
+  const locInfo = tempLocs.map((l,i) => `Location ${i}: ${l.name} (remaining ${l.remainingArea.toFixed(2)} ft²)`).join('\n');
+  const prompt = `You are a warehouse management AI. Choose the BEST storage location for this item.\nPart Number: ${item.partNumber}\nDescription: ${item.description}\nItem requires: ${item.area} square feet.\nAvailable locations:\n${locInfo}\nRULES: (1) Choose a location with enough remaining space. (2) Prefer best-fit (least wasted space). (3) Respond with ONLY the location number (0-${tempLocs.length-1}). No other text.`;
+  try {
+    const res  = await fetch(GEMINI_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+    const data = await res.json();
+    const content = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    const num = parseInt(content.replace(/\D+/g,''), 10);
+    document.getElementById('aiThinking').classList.remove('show');
+    const rc = document.getElementById('aiResultContent');
+    if (!isNaN(num) && num >= 0 && num < state.locations.length && tempLocs[num].remainingArea >= item.area) {
+      if (item.locationIndex !== -1) state.locations[item.locationIndex].remainingArea += item.area;
+      item.locationIndex = num;
+      state.locations[num].remainingArea -= item.area;
+      saveState();
+      rc.innerHTML = `<div style="background:#E8F4EE;border:1px solid #B8DEC9;border-radius:8px;padding:16px;margin-bottom:16px">
+        <div style="font-weight:700;color:var(--green);margin-bottom:6px">✓ AI placed item successfully</div>
+        <div style="font-size:13px">Location: <strong>[${num}] ${escHtml(state.locations[num].name)}</strong></div>
+        <div style="font-size:13px;margin-top:4px">Remaining space: <strong>${state.locations[num].remainingArea.toFixed(2)} ft²</strong></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono)">Gemini response: "${escHtml(content.trim())}"</div>
+      </div>`;
+      refreshAll();
+    } else {
+      rc.innerHTML = `<div style="background:#FFF0F0;border:1px solid var(--red);border-radius:8px;padding:16px;margin-bottom:16px">
+        <div style="font-weight:700;color:var(--red);margin-bottom:6px">⚠️ AI could not find a suitable location</div>
+        <div style="font-size:13px;color:var(--muted)">Response: "${escHtml(content.trim())}" — no valid location with enough space.</div>
+      </div>`;
+    }
+    rc.style.display = 'block';
+  } catch(err) {
+    document.getElementById('aiThinking').classList.remove('show');
+    document.getElementById('aiResultContent').innerHTML = `<div style="background:#FFF0F0;border:1px solid var(--red);border-radius:8px;padding:16px;margin-bottom:16px;font-size:13px;color:var(--red)"><strong>API Error:</strong> ${escHtml(err.message)}</div>`;
+    document.getElementById('aiResultContent').style.display = 'block';
+  }
+}
+
+async function aiPlaceByPN() {
+  const pn = document.getElementById('aiBarPN').value.trim();
+  if (!pn) return toast('Enter a part number','warning');
+  const item = state.items.find(i => i.partNumber.toLowerCase() === pn.toLowerCase());
+  if (!item) return toast('Part number not found','error');
+  document.getElementById('aiBarPN').value = '';
+  openAiModal(item.id);
+}
+
+async function bulkAiPack() {
+  const unplaced = state.items.filter(i => i.locationIndex === -1 && !isInWA(i));
+  if (unplaced.length === 0) return toast('All items are already placed','warning');
+  if (!confirm(`AI will attempt to place ${unplaced.length} unassigned items using LAFF algorithm. This will make multiple Gemini API calls. Continue?`)) return;
+  const sorted = [...unplaced].sort((a,b) => b.area - a.area); // LAFF
+  let placed = 0, failed = 0;
+  toast(`⚡ AI placing ${sorted.length} items...`,'success');
+  for (const item of sorted) {
+    const tempLocs = state.locations.map(l => ({...l}));
+    const locInfo = tempLocs.map((l,i) => `Location ${i}: ${l.name} (remaining ${l.remainingArea.toFixed(2)} ft²)`).join('\n');
+    const prompt = `You are a warehouse management AI. Choose the BEST storage location for this item.\nPart Number: ${item.partNumber}\nDescription: ${item.description}\nItem requires: ${item.area} square feet.\nAvailable locations:\n${locInfo}\nRULES: (1) Enough space. (2) Best-fit. (3) Respond with ONLY the location number (0-${tempLocs.length-1}).`;
+    try {
+      const r = await fetch(GEMINI_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
+      const data = await r.json();
+      const content = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      const num = parseInt(content.replace(/\D+/g,''), 10);
+      if (!isNaN(num) && num >= 0 && num < state.locations.length && state.locations[num].remainingArea >= item.area) {
+        item.locationIndex = num;
+        state.locations[num].remainingArea -= item.area;
+        placed++;
+      } else { failed++; }
+    } catch { failed++; }
+    await new Promise(r => setTimeout(r, 250));
+  }
+  saveState();
+  toast(`✓ Placed ${placed} · Could not place ${failed}`, placed>0?'success':'warning');
+  refreshAll();
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════
+function exportCSV() {
+  const header = 'PartNumber,Description,Area,Price,Location,Status';
+  const rows = state.items.map(item => {
+    const status = isInWA(item) ? 'IN WORK AREA' : 'IN STORAGE';
+    const loc    = isInWA(item) ? 'WORK AREA' : item.locationIndex !== -1 ? state.locations[item.locationIndex]?.name : 'NOT STORED';
+    return [item.partNumber, `"${item.description}"`, item.area, item.price, loc, status].join(',');
+  });
+  const csv = [header, ...rows].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), {href:url, download:'trackit_inventory.csv'});
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('✓ Exported trackit_inventory.csv','success');
+}
+
+// ═══════════════════════════════════════════════════
+// TIMERS
+// ═══════════════════════════════════════════════════
+function startTimers() {
+  setInterval(() => {
+    // Update work area timers without full re-render
+    const now = Date.now();
+    state.items.filter(isInWA).forEach(item => {
+      const elapsed=now-item.workAreaCheckoutTime, mins=Math.floor(elapsed/60000), rem=15-mins, late=elapsed>FIFTEEN_MS;
+      // Dashboard
+      const dashItems = document.querySelectorAll('.work-area-item');
+      dashItems.forEach(el => {
+        if (el.textContent.includes(item.partNumber)) {
+          const timerEl = el.querySelector('.wa-timer');
+          if (timerEl) {
+            timerEl.textContent = late ? `OVERDUE ${Math.abs(rem)}m` : `${rem}m left`;
+            timerEl.className = `wa-timer ${late?'timer-late':'timer-ok'}`;
+          }
+        }
+      });
+    });
+    // Full refresh every 10 seconds handled separately
+  }, 5000);
+  setInterval(refreshAll, 10000);
+}
+
+// ═══════════════════════════════════════════════════
+// GLOBAL HELPERS
+// ═══════════════════════════════════════════════════
+function refreshAll() {
+  renderDashboard();
+  renderInventory();
+  renderPlacement();
+  renderWorkArea();
+  renderAlerts();
+  renderHistory();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let toastTimer;
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast'; }, 3500);
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el =>
+  el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); })
+);
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  const map = {'1':'dashboard','2':'inventory','3':'placement','4':'workarea','5':'alerts','6':'history'};
+  if (map[e.key]) showView(map[e.key]);
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+
+// BOOT
+boot();
+</script>
+</body>
+</html>
